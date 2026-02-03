@@ -1,0 +1,210 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 700">
+  <defs>
+    <style>
+      .title { font: bold 24px Arial; fill: #2E75B6; }
+      .subtitle { font: 14px Arial; fill: #666; }
+      .label { font: bold 12px Arial; fill: #333; }
+      .pin-label { font: 10px Arial; fill: #333; }
+      .small-label { font: 9px Arial; fill: #666; }
+      .component-title { font: bold 14px Arial; fill: #fff; }
+      .wire { stroke-width: 2; fill: none; }
+      .wire-flow { stroke: #0066cc; }
+      .wire-input { stroke: #009933; }
+      .wire-output { stroke: #cc3300; }
+      .wire-serial { stroke: #9933cc; }
+      .wire-gnd { stroke: #333; }
+      .wire-power { stroke: #cc0000; }
+    </style>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1000" height="700" fill="#fafafa"/>
+  
+  <!-- Title -->
+  <text x="500" y="35" text-anchor="middle" class="title">M5StampPLC Batch Fill Controller - Wiring Schematic</text>
+  <text x="500" y="55" text-anchor="middle" class="subtitle">Version 0.16 - 4-Channel Volumetric Dispensing System</text>
+  
+  <!-- M5StampPLC Main Unit -->
+  <rect x="350" y="100" width="300" height="400" rx="10" fill="#2E75B6" stroke="#1a5a8a" stroke-width="3"/>
+  <text x="500" y="130" text-anchor="middle" class="component-title">M5StampPLC</text>
+  
+  <!-- Display area -->
+  <rect x="380" y="145" width="140" height="90" rx="5" fill="#001a33" stroke="#333"/>
+  <text x="450" y="175" text-anchor="middle" font-size="10" fill="#00ffff">BATCH FILL SP:375</text>
+  <text x="450" y="190" text-anchor="middle" font-size="8" fill="#fff">CH IN OUT ml STATE</text>
+  <text x="450" y="205" text-anchor="middle" font-size="8" fill="#0f0">1  ●  ●  125 RUN</text>
+  <text x="450" y="218" text-anchor="middle" font-size="8" fill="#fff">2  ○  ○    0 IDLE</text>
+  
+  <!-- Buttons -->
+  <rect x="540" y="155" width="30" height="20" rx="3" fill="#444" stroke="#222"/>
+  <text x="555" y="169" text-anchor="middle" font-size="8" fill="#fff">A</text>
+  <rect x="540" y="180" width="30" height="20" rx="3" fill="#444" stroke="#222"/>
+  <text x="555" y="194" text-anchor="middle" font-size="8" fill="#fff">B</text>
+  <rect x="540" y="205" width="30" height="20" rx="3" fill="#444" stroke="#222"/>
+  <text x="555" y="219" text-anchor="middle" font-size="8" fill="#fff">C</text>
+  
+  <!-- Left side - Flowmeter inputs (GPIO) -->
+  <text x="370" y="265" text-anchor="end" class="label">Flowmeter Inputs</text>
+  
+  <!-- GPIO pins -->
+  <rect x="355" y="275" width="40" height="20" fill="#4a90d9"/>
+  <text x="375" y="289" text-anchor="middle" class="pin-label" fill="#fff">GPIO1</text>
+  <rect x="355" y="300" width="40" height="20" fill="#4a90d9"/>
+  <text x="375" y="314" text-anchor="middle" class="pin-label" fill="#fff">GPIO2</text>
+  <rect x="355" y="325" width="40" height="20" fill="#4a90d9"/>
+  <text x="375" y="339" text-anchor="middle" class="pin-label" fill="#fff">GPIO4</text>
+  <rect x="355" y="350" width="40" height="20" fill="#ffaa00"/>
+  <text x="375" y="364" text-anchor="middle" class="pin-label" fill="#000">GPIO5</text>
+  <text x="398" y="378" class="small-label">⚠ Strapping</text>
+  
+  <!-- Right side - Digital Inputs -->
+  <text x="630" y="265" class="label">Start Inputs</text>
+  
+  <rect x="605" y="275" width="40" height="20" fill="#009933"/>
+  <text x="625" y="289" text-anchor="middle" class="pin-label" fill="#fff">IN1</text>
+  <rect x="605" y="300" width="40" height="20" fill="#009933"/>
+  <text x="625" y="314" text-anchor="middle" class="pin-label" fill="#fff">IN2</text>
+  <rect x="605" y="325" width="40" height="20" fill="#009933"/>
+  <text x="625" y="339" text-anchor="middle" class="pin-label" fill="#fff">IN3</text>
+  <rect x="605" y="350" width="40" height="20" fill="#009933"/>
+  <text x="625" y="364" text-anchor="middle" class="pin-label" fill="#fff">IN4</text>
+  
+  <!-- Right side - Relay Outputs -->
+  <text x="630" y="400" class="label">Valve/Pump Outputs</text>
+  
+  <rect x="605" y="410" width="40" height="20" fill="#cc3300"/>
+  <text x="625" y="424" text-anchor="middle" class="pin-label" fill="#fff">OUT1</text>
+  <rect x="605" y="435" width="40" height="20" fill="#cc3300"/>
+  <text x="625" y="449" text-anchor="middle" class="pin-label" fill="#fff">OUT2</text>
+  <rect x="605" y="460" width="40" height="20" fill="#cc3300"/>
+  <text x="625" y="474" text-anchor="middle" class="pin-label" fill="#fff">OUT3</text>
+  <rect x="605" y="485" width="40" height="20" fill="#cc3300"/>
+  <text x="625" y="499" text-anchor="middle" class="pin-label" fill="#fff">OUT4</text>
+  
+  <!-- Serial Port (bottom) -->
+  <text x="500" y="530" text-anchor="middle" class="label">Serial2 (RPI Interface)</text>
+  <rect x="430" y="540" width="50" height="20" fill="#9933cc"/>
+  <text x="455" y="554" text-anchor="middle" class="pin-label" fill="#fff">GPIO40</text>
+  <text x="455" y="570" text-anchor="middle" class="small-label">RX</text>
+  <rect x="520" y="540" width="50" height="20" fill="#9933cc"/>
+  <text x="545" y="554" text-anchor="middle" class="pin-label" fill="#fff">GPIO41</text>
+  <text x="545" y="570" text-anchor="middle" class="small-label">TX</text>
+  
+  <!-- ========== FLOWMETERS (Left) ========== -->
+  <g id="flowmeters">
+    <!-- Flowmeter 1 -->
+    <rect x="120" y="260" width="100" height="50" rx="5" fill="#e6f3ff" stroke="#0066cc" stroke-width="2"/>
+    <text x="170" y="280" text-anchor="middle" class="label">Flowmeter 1</text>
+    <text x="170" y="300" text-anchor="middle" class="small-label">CH1 - Pulse Out</text>
+    <path d="M220 285 L355 285" class="wire wire-flow" marker-end="url(#arrow)"/>
+    
+    <!-- Flowmeter 2 -->
+    <rect x="120" y="315" width="100" height="50" rx="5" fill="#e6f3ff" stroke="#0066cc" stroke-width="2"/>
+    <text x="170" y="335" text-anchor="middle" class="label">Flowmeter 2</text>
+    <text x="170" y="355" text-anchor="middle" class="small-label">CH2 - Pulse Out</text>
+    <path d="M220 340 L355 310" class="wire wire-flow"/>
+    
+    <!-- Flowmeter 3 -->
+    <rect x="120" y="370" width="100" height="50" rx="5" fill="#e6f3ff" stroke="#0066cc" stroke-width="2"/>
+    <text x="170" y="390" text-anchor="middle" class="label">Flowmeter 3</text>
+    <text x="170" y="410" text-anchor="middle" class="small-label">CH3 - Pulse Out</text>
+    <path d="M220 395 L355 335" class="wire wire-flow"/>
+    
+    <!-- Flowmeter 4 -->
+    <rect x="120" y="425" width="100" height="50" rx="5" fill="#fff5e6" stroke="#ff9900" stroke-width="2"/>
+    <text x="170" y="445" text-anchor="middle" class="label">Flowmeter 4</text>
+    <text x="170" y="465" text-anchor="middle" class="small-label">CH4 - Pulse Out</text>
+    <path d="M220 450 L355 360" class="wire wire-flow"/>
+  </g>
+  
+  <!-- ========== START BUTTONS (Right top) ========== -->
+  <g id="buttons">
+    <rect x="750" y="260" width="100" height="130" rx="5" fill="#e6ffe6" stroke="#009933" stroke-width="2"/>
+    <text x="800" y="280" text-anchor="middle" class="label">Start Buttons</text>
+    <text x="800" y="300" text-anchor="middle" class="small-label">BTN1 → IN1</text>
+    <text x="800" y="320" text-anchor="middle" class="small-label">BTN2 → IN2</text>
+    <text x="800" y="340" text-anchor="middle" class="small-label">BTN3 → IN3</text>
+    <text x="800" y="360" text-anchor="middle" class="small-label">BTN4 → IN4</text>
+    <text x="800" y="380" text-anchor="middle" class="small-label">(Hold during fill)</text>
+    
+    <path d="M750 285 L645 285" class="wire wire-input"/>
+    <path d="M750 305 L645 310" class="wire wire-input"/>
+    <path d="M750 325 L645 335" class="wire wire-input"/>
+    <path d="M750 345 L645 360" class="wire wire-input"/>
+  </g>
+  
+  <!-- ========== VALVES/PUMPS (Right bottom) ========== -->
+  <g id="valves">
+    <rect x="750" y="400" width="100" height="130" rx="5" fill="#ffe6e6" stroke="#cc3300" stroke-width="2"/>
+    <text x="800" y="420" text-anchor="middle" class="label">Valves/Pumps</text>
+    <text x="800" y="445" text-anchor="middle" class="small-label">OUT1 → Valve 1</text>
+    <text x="800" y="465" text-anchor="middle" class="small-label">OUT2 → Valve 2</text>
+    <text x="800" y="485" text-anchor="middle" class="small-label">OUT3 → Valve 3</text>
+    <text x="800" y="505" text-anchor="middle" class="small-label">OUT4 → Valve 4</text>
+    
+    <path d="M645 420 L750 440" class="wire wire-output"/>
+    <path d="M645 445 L750 460" class="wire wire-output"/>
+    <path d="M645 470 L750 480" class="wire wire-output"/>
+    <path d="M645 495 L750 500" class="wire wire-output"/>
+  </g>
+  
+  <!-- ========== RASPBERRY PI (Bottom) ========== -->
+  <g id="rpi">
+    <rect x="400" y="600" width="200" height="80" rx="10" fill="#c51a4a" stroke="#8b1234" stroke-width="2"/>
+    <text x="500" y="625" text-anchor="middle" class="component-title">Raspberry Pi</text>
+    <text x="500" y="645" text-anchor="middle" font-size="10" fill="#fff">Serial: /dev/ttyS0</text>
+    <text x="500" y="660" text-anchor="middle" font-size="10" fill="#fff">115200 baud, 8N1</text>
+    
+    <!-- TX/RX labels on RPi -->
+    <text x="440" y="597" text-anchor="middle" class="small-label">TX</text>
+    <text x="560" y="597" text-anchor="middle" class="small-label">RX</text>
+    
+    <!-- Serial wires - crossed -->
+    <path d="M455 560 L455 580 L440 600" class="wire wire-serial" stroke-dasharray="5,3"/>
+    <path d="M545 560 L545 580 L560 600" class="wire wire-serial" stroke-dasharray="5,3"/>
+    
+    <!-- GND wire -->
+    <path d="M500 510 L500 600" class="wire wire-gnd" stroke-dasharray="2,2"/>
+    <text x="510" y="585" class="small-label">GND</text>
+  </g>
+  
+  <!-- ========== LEGEND ========== -->
+  <g id="legend">
+    <rect x="20" y="570" width="180" height="120" rx="5" fill="#fff" stroke="#ccc"/>
+    <text x="110" y="590" text-anchor="middle" class="label">Wire Legend</text>
+    
+    <line x1="30" y1="605" x2="70" y2="605" class="wire wire-flow"/>
+    <text x="80" y="609" class="small-label">Flowmeter Pulse</text>
+    
+    <line x1="30" y1="625" x2="70" y2="625" class="wire wire-input"/>
+    <text x="80" y="629" class="small-label">Digital Input</text>
+    
+    <line x1="30" y1="645" x2="70" y2="645" class="wire wire-output"/>
+    <text x="80" y="649" class="small-label">Relay Output</text>
+    
+    <line x1="30" y1="665" x2="70" y2="665" class="wire wire-serial" stroke-dasharray="5,3"/>
+    <text x="80" y="669" class="small-label">Serial (RPI)</text>
+    
+    <line x1="30" y1="685" x2="70" y2="685" class="wire wire-gnd" stroke-dasharray="2,2"/>
+    <text x="80" y="689" class="small-label">Ground</text>
+  </g>
+  
+  <!-- ========== NOTES ========== -->
+  <g id="notes">
+    <rect x="700" y="570" width="280" height="120" rx="5" fill="#fffbf0" stroke="#e6a000"/>
+    <text x="840" y="590" text-anchor="middle" class="label">Notes</text>
+    <text x="710" y="610" class="small-label">• Flowmeters: Open-collector or NPN output</text>
+    <text x="710" y="625" class="small-label">• Internal pull-ups enabled on GPIO 1,2,4,5</text>
+    <text x="710" y="640" class="small-label">• GPIO5 (CH4): ESP32 strapping pin - no</text>
+    <text x="718" y="653" class="small-label">external pull-down allowed</text>
+    <text x="710" y="670" class="small-label">• Pulse counting: FALLING edge trigger</text>
+    <text x="710" y="685" class="small-label">• Start buttons must be HELD during fill</text>
+  </g>
+  
+  <!-- Channel labels on flowmeter wires -->
+  <text x="280" y="278" class="small-label" fill="#0066cc">CH1</text>
+  <text x="280" y="323" class="small-label" fill="#0066cc">CH2</text>
+  <text x="280" y="368" class="small-label" fill="#0066cc">CH3</text>
+  <text x="280" y="413" class="small-label" fill="#ff9900">CH4</text>
+  
+</svg>

@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M5StampPLC Batch Fill Controller - Operating Manual v0.16</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            color: #333;
+        }
+        h1 { color: #2E75B6; border-bottom: 3px solid #2E75B6; padding-bottom: 10px; }
+        h2 { color: #2E75B6; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-top: 30px; }
+        h3 { color: #444; margin-top: 20px; }
+        table { border-collapse: collapse; width: 100%; margin: 15px 0; }
+        th, td { border: 1px solid #999; padding: 10px; text-align: left; }
+        th { background-color: #2E75B6; color: white; }
+        tr:nth-child(even) { background-color: #f5f5f5; }
+        code { background-color: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-family: 'Courier New', monospace; }
+        .title-page { text-align: center; padding: 100px 0; page-break-after: always; }
+        .title-page h1 { font-size: 2.5em; border: none; }
+        .title-page .subtitle { font-size: 1.5em; color: #666; margin-top: 20px; }
+        .title-page .version { color: #999; margin-top: 40px; }
+        .warning { background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 10px 15px; margin: 15px 0; }
+        .note { background-color: #d1ecf1; border-left: 4px solid #17a2b8; padding: 10px 15px; margin: 15px 0; }
+        .danger { background-color: #f8d7da; border-left: 4px solid #dc3545; padding: 10px 15px; margin: 15px 0; }
+        ul, ol { margin: 10px 0; padding-left: 25px; }
+        li { margin: 5px 0; }
+        .state-idle { color: white; background: #666; padding: 2px 8px; border-radius: 3px; }
+        .state-run { color: white; background: #28a745; padding: 2px 8px; border-radius: 3px; }
+        .state-done { color: black; background: #ffc107; padding: 2px 8px; border-radius: 3px; }
+        .state-fail { color: white; background: #dc3545; padding: 2px 8px; border-radius: 3px; }
+        .toc { background: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0; }
+        .toc a { text-decoration: none; color: #2E75B6; }
+        .toc a:hover { text-decoration: underline; }
+        @media print {
+            body { max-width: 100%; }
+            .title-page { page-break-after: always; }
+            h1 { page-break-before: always; }
+            h1:first-of-type { page-break-before: avoid; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="title-page">
+    <h1>M5StampPLC<br>Batch Fill Controller</h1>
+    <div class="subtitle">Operating Manual</div>
+    <div class="version">Version 0.16</div>
+    <p style="margin-top: 80px; color: #666; font-style: italic;">
+        4-Channel Volumetric Batch Fill System<br>
+        with Flowmeter Pulse Counting
+    </p>
+</div>
+
+<div class="toc">
+    <h2 style="margin-top: 0; border: none;">Table of Contents</h2>
+    <ol>
+        <li><a href="#overview">Overview</a></li>
+        <li><a href="#hardware">Hardware Connections</a></li>
+        <li><a href="#display">Display Interface</a></li>
+        <li><a href="#operation">Operation</a></li>
+        <li><a href="#settings">Settings Menu</a></li>
+        <li><a href="#remote">Remote Control (Raspberry Pi)</a></li>
+        <li><a href="#commands">Serial Commands</a></li>
+        <li><a href="#troubleshooting">Troubleshooting</a></li>
+        <li><a href="#specifications">Specifications</a></li>
+    </ol>
+</div>
+
+<h1 id="overview">1. Overview</h1>
+
+<p>The M5StampPLC Batch Fill Controller is a 4-channel volumetric dispensing system designed for precise liquid filling applications. Each channel independently monitors a flowmeter and controls a valve/pump to dispense exact volumes.</p>
+
+<h3>Key Features</h3>
+<ul>
+    <li>4 independent fill channels</li>
+    <li>Pulse-counting flowmeter inputs (GPIO 1, 2, 4, 5)</li>
+    <li>Relay outputs for valves/pumps (OUT1-4)</li>
+    <li>Non-volatile storage for setpoint, K-factors, and cycle counts</li>
+    <li>Local button control with TFT display</li>
+    <li>Remote control via Raspberry Pi serial interface</li>
+    <li>Configurable K-factor per channel for flowmeter calibration</li>
+</ul>
+
+<h3>Operating Principle</h3>
+<p>Each channel operates independently using a simple state machine:</p>
+<ol>
+    <li><span class="state-idle">IDLE</span> — Waiting for start input</li>
+    <li><span class="state-run">RUNNING</span> — Output ON, counting flowmeter pulses</li>
+    <li><span class="state-done">COMPLETE</span> — Setpoint reached, output OFF, waiting for input release</li>
+    <li><span class="state-fail">FAILED</span> — Input released early, counter frozen showing fail point</li>
+</ol>
+
+<h1 id="hardware">2. Hardware Connections</h1>
+
+<h2>2.1 Flowmeter Inputs</h2>
+<p>Flowmeters connect to GPIO pins configured with internal pull-up resistors. Pulses are counted on the <strong>FALLING edge</strong>.</p>
+
+<table>
+    <tr><th>Channel</th><th>GPIO Pin</th><th>Notes</th></tr>
+    <tr><td>CH1</td><td>GPIO 1</td><td>Standard input</td></tr>
+    <tr><td>CH2</td><td>GPIO 2</td><td>Standard input</td></tr>
+    <tr><td>CH3</td><td>GPIO 4</td><td>Standard input</td></tr>
+    <tr><td>CH4</td><td>GPIO 5</td><td>ESP32 strapping pin — see warning below</td></tr>
+</table>
+
+<div class="warning">
+    <strong>⚠️ GPIO 5 Warning:</strong> GPIO 5 is an ESP32 strapping pin. It must be HIGH or floating during boot. Do not connect external pull-down resistors. Use the internal pull-up only.
+</div>
+
+<h2>2.2 Digital Inputs (Start Buttons)</h2>
+<p>Start inputs use the M5StampPLC onboard optoisolated inputs IN1-IN4. The input must be <strong>held ON</strong> during the entire fill cycle.</p>
+
+<table>
+    <tr><th>Channel</th><th>PLC Input</th><th>Function</th></tr>
+    <tr><td>CH1</td><td>IN1</td><td>Start/Hold CH1</td></tr>
+    <tr><td>CH2</td><td>IN2</td><td>Start/Hold CH2</td></tr>
+    <tr><td>CH3</td><td>IN3</td><td>Start/Hold CH3</td></tr>
+    <tr><td>CH4</td><td>IN4</td><td>Start/Hold CH4</td></tr>
+</table>
+
+<h2>2.3 Relay Outputs</h2>
+<p>Relay outputs OUT1-OUT4 control valves or pumps. Outputs are ON during RUNNING state only.</p>
+
+<table>
+    <tr><th>Channel</th><th>PLC Output</th><th>Function</th></tr>
+    <tr><td>CH1</td><td>OUT1</td><td>Valve/Pump CH1</td></tr>
+    <tr><td>CH2</td><td>OUT2</td><td>Valve/Pump CH2</td></tr>
+    <tr><td>CH3</td><td>OUT3</td><td>Valve/Pump CH3</td></tr>
+    <tr><td>CH4</td><td>OUT4</td><td>Valve/Pump CH4</td></tr>
+</table>
+
+<h2>2.4 Raspberry Pi Serial Connection</h2>
+<p>For remote control, connect to Serial2:</p>
+<table>
+    <tr><th>M5StampPLC</th><th>Raspberry Pi</th><th>Description</th></tr>
+    <tr><td>GPIO 40 (RX)</td><td>TX</td><td>Data from RPi to PLC</td></tr>
+    <tr><td>GPIO 41 (TX)</td><td>RX</td><td>Data from PLC to RPi</td></tr>
+    <tr><td>GND</td><td>GND</td><td>Common ground</td></tr>
+</table>
+<p><strong>Settings:</strong> 115200 baud, 8N1</p>
+
+<h1 id="display">3. Display Interface</h1>
+
+<h2>3.1 Main Screen Layout</h2>
+<p>The main screen shows all 4 channels simultaneously with the following columns:</p>
+
+<table>
+    <tr><th>Column</th><th>Description</th></tr>
+    <tr><td>CH</td><td>Channel number (1-4)</td></tr>
+    <tr><td>IN</td><td>Input indicator (🟢 Green = ON, 🔴 Red = OFF)</td></tr>
+    <tr><td>OUT</td><td>Output indicator (🟢 Green = ON, 🔴 Red = OFF)</td></tr>
+    <tr><td>ml</td><td>Current volume dispensed (cyan text)</td></tr>
+    <tr><td>STATE</td><td>Channel state: IDLE / RUN / DONE / FAIL</td></tr>
+    <tr><td>CYCL</td><td>Total completed cycles (magenta text)</td></tr>
+</table>
+
+<h2>3.2 Status Colors</h2>
+<ul>
+    <li><span class="state-idle">IDLE</span> — White text, ready for new cycle</li>
+    <li><span class="state-run">RUN</span> — Green text, filling in progress</li>
+    <li><span class="state-done">DONE</span> — Yellow text, cycle complete, release input</li>
+    <li><span class="state-fail">FAIL</span> — Red text, input released early</li>
+</ul>
+
+<h2>3.3 Header Information</h2>
+<p>The top of the display shows:</p>
+<ul>
+    <li><strong>BATCH FILL</strong> — Program name</li>
+    <li><strong>SP:xxx ml</strong> — Current setpoint</li>
+    <li><strong>vX.XX</strong> — Firmware version (top right)</li>
+</ul>
+
+<h1 id="operation">4. Operation</h1>
+
+<h2>4.1 Normal Fill Cycle</h2>
+<ol>
+    <li>Ensure channel is in <span class="state-idle">IDLE</span> state</li>
+    <li>Press and <strong>HOLD</strong> the start button (IN1-4)</li>
+    <li>Output turns ON, valve/pump activates</li>
+    <li>Watch ml counter increase as liquid flows</li>
+    <li>When setpoint is reached, output turns OFF automatically</li>
+    <li>State changes to <span class="state-done">DONE</span>, cycle counter increments</li>
+    <li>Release start button to return to <span class="state-idle">IDLE</span></li>
+</ol>
+
+<h2>4.2 Failed Fill Recovery</h2>
+<p>If the start button is released before the setpoint is reached:</p>
+<ol>
+    <li>Output turns OFF immediately</li>
+    <li>State changes to <span class="state-fail">FAIL</span></li>
+    <li>ml display freezes showing volume at failure point</li>
+    <li>Press start button again to restart (counter resets to zero)</li>
+</ol>
+
+<div class="note">
+    <strong>💡 Tip:</strong> The FAIL state shows exactly how much was dispensed before the interruption, useful for troubleshooting.
+</div>
+
+<h2>4.3 Button Functions</h2>
+<table>
+    <tr><th>Button</th><th>Main Screen</th><th>Settings Menu</th><th>Value Adjust</th></tr>
+    <tr><td>Button A</td><td>—</td><td>Navigate UP</td><td>Increase value</td></tr>
+    <tr><td>Button B</td><td>—</td><td>Navigate DOWN</td><td>Decrease value</td></tr>
+    <tr><td>Button C</td><td>Enter Config</td><td>SELECT item</td><td>SAVE & return</td></tr>
+</table>
+
+<div class="note">
+    <strong>💡 Note:</strong> The "config" label appears at the bottom right when Button C is available (all channels IDLE or FAILED).
+</div>
+
+<h1 id="settings">5. Settings Menu</h1>
+
+<p>Press <strong>Button C</strong> when all channels are IDLE or FAILED to enter the settings menu.</p>
+
+<h2>5.1 Menu Options</h2>
+<table>
+    <tr><th>Option</th><th>Description</th></tr>
+    <tr><td>&lt;&lt; EXIT</td><td>Return to main screen</td></tr>
+    <tr><td>Setpoint (all CH)</td><td>Target volume in ml (5-9999, step 5)</td></tr>
+    <tr><td>K-Factor CH1</td><td>Pulses per ml for channel 1 (0.01-100)</td></tr>
+    <tr><td>K-Factor CH2</td><td>Pulses per ml for channel 2 (0.01-100)</td></tr>
+    <tr><td>K-Factor CH3</td><td>Pulses per ml for channel 3 (0.01-100)</td></tr>
+    <tr><td>K-Factor CH4</td><td>Pulses per ml for channel 4 (0.01-100)</td></tr>
+    <tr><td>Reset Cycle Counts</td><td>Zero all cycle counters</td></tr>
+</table>
+
+<h2>5.2 K-Factor Calibration</h2>
+<p>The K-factor converts flowmeter pulses to volume:</p>
+<p style="text-align: center; font-size: 1.2em;"><code>ml = pulses ÷ K-factor</code></p>
+
+<p><strong>To calibrate:</strong></p>
+<ol>
+    <li>Set K-factor to <code>1.0</code> temporarily</li>
+    <li>Dispense a known volume (e.g., 100ml into a graduated cylinder)</li>
+    <li>Note the pulse count shown on display</li>
+    <li>Calculate: <code>K-factor = pulses ÷ actual ml</code></li>
+    <li>Enter the calculated K-factor in settings</li>
+</ol>
+
+<div class="note">
+    <strong>💡 Example:</strong> If you dispensed 100ml and counted 520 pulses, then K-factor = 520 ÷ 100 = <strong>5.2</strong>
+</div>
+
+<h1 id="remote">6. Remote Control (Raspberry Pi)</h1>
+
+<p>The controller can be operated remotely via serial commands from a Raspberry Pi or other host.</p>
+
+<h2>6.1 Connection Settings</h2>
+<ul>
+    <li><strong>Baud rate:</strong> 115200</li>
+    <li><strong>Data format:</strong> 8N1</li>
+    <li><strong>Status reports:</strong> Sent automatically every 2 seconds (JSON)</li>
+</ul>
+
+<h2>6.2 Remote Start/Stop (Latching)</h2>
+<p>Remote commands use <strong>latching</strong> — no need to hold the command:</p>
+<ul>
+    <li><code>START1</code> ... <code>START4</code> — Latches channel ON until complete or stopped</li>
+    <li><code>STOP1</code> ... <code>STOP4</code> — Unlatches channel, causes FAILED if running</li>
+</ul>
+<p>The latch automatically clears when the cycle completes.</p>
+
+<h2>6.3 JSON Status Format</h2>
+<p>Status messages are sent every 2 seconds in this format:</p>
+<pre style="background: #f5f5f5; padding: 15px; overflow-x: auto; font-size: 0.9em;">
+{
+  "timestamp": 12345678,
+  "setpoint": 375,
+  "channels": [
+    {
+      "ch": 1,
+      "state": "IDLE",
+      "input": false,
+      "output": false,
+      "counts": 0,
+      "ml": 0,
+      "kfactor": 5.00,
+      "cycles": 42,
+      "latched": false
+    },
+    ...
+  ]
+}
+</pre>
+
+<h1 id="commands">7. Serial Commands</h1>
+
+<p>Commands are available via USB serial and RPI serial. Commands are case-insensitive.</p>
+
+<table>
+    <tr><th>Command</th><th>Description</th><th>Response</th></tr>
+    <tr><td><code>SP=xxx</code></td><td>Set setpoint (5-9999 ml)</td><td>JSON OK/ERROR</td></tr>
+    <tr><td><code>K1=x.xx</code> ... <code>K4=x.xx</code></td><td>Set K-factor (0.01-100)</td><td>JSON OK/ERROR</td></tr>
+    <tr><td><code>START1</code> ... <code>START4</code></td><td>Start channel (latch ON)</td><td>JSON OK/WAIT/ERROR</td></tr>
+    <tr><td><code>STOP1</code> ... <code>STOP4</code></td><td>Stop channel (unlatch)</td><td>JSON OK/ERROR</td></tr>
+    <tr><td><code>STATUS</code></td><td>Request full status</td><td>JSON status object</td></tr>
+    <tr><td><code>DEBUG</code></td><td>Show GPIO states & counters</td><td>Debug info</td></tr>
+    <tr><td><code>RESETCYCLES</code></td><td>Zero all cycle counters</td><td>JSON OK</td></tr>
+    <tr><td><code>HELP</code></td><td>List available commands</td><td>Command list</td></tr>
+</table>
+
+<h1 id="troubleshooting">8. Troubleshooting</h1>
+
+<table>
+    <tr><th>Problem</th><th>Possible Cause</th><th>Solution</th></tr>
+    <tr>
+        <td>ml not counting</td>
+        <td>Flowmeter not connected or wrong polarity</td>
+        <td>Check wiring. Use <code>DEBUG</code> command to verify GPIO state changes.</td>
+    </tr>
+    <tr>
+        <td>False counts on power-up</td>
+        <td>Noise on flowmeter line</td>
+        <td>Add external 4.7k-10k pull-up resistor to 3.3V on flowmeter signal.</td>
+    </tr>
+    <tr>
+        <td>CH4 not working</td>
+        <td>GPIO5 strapping pin conflict</td>
+        <td>Ensure no external pull-down. Check boot messages for errors.</td>
+    </tr>
+    <tr>
+        <td>Config button not showing</td>
+        <td>Channel not in IDLE/FAILED state</td>
+        <td>Wait for RUNNING to complete or DONE state to clear.</td>
+    </tr>
+    <tr>
+        <td>Inaccurate volume</td>
+        <td>K-factor not calibrated</td>
+        <td>Recalibrate K-factor using graduated cylinder.</td>
+    </tr>
+    <tr>
+        <td>Settings not saving</td>
+        <td>NVM corruption</td>
+        <td>Flash NVM clear utility, then reprogram main firmware.</td>
+    </tr>
+    <tr>
+        <td>Remote commands not working</td>
+        <td>Serial wiring reversed</td>
+        <td>Check TX/RX connections. PLC RX → RPi TX, PLC TX → RPi RX.</td>
+    </tr>
+</table>
+
+<h1 id="specifications">9. Specifications</h1>
+
+<h2>9.1 Default Values</h2>
+<table>
+    <tr><th>Parameter</th><th>Default Value</th></tr>
+    <tr><td>Setpoint</td><td>375 ml</td></tr>
+    <tr><td>K-Factor (all channels)</td><td>5.0 pulses/ml</td></tr>
+    <tr><td>Cycle Counts</td><td>0 (persists across power cycles)</td></tr>
+</table>
+
+<h2>9.2 Adjustable Ranges</h2>
+<table>
+    <tr><th>Parameter</th><th>Range</th><th>Step</th></tr>
+    <tr><td>Setpoint</td><td>5 — 9999 ml</td><td>5 ml</td></tr>
+    <tr><td>K-Factor</td><td>0.01 — 100.0</td><td>0.01</td></tr>
+</table>
+
+<h2>9.3 Communication</h2>
+<table>
+    <tr><th>Interface</th><th>Settings</th></tr>
+    <tr><td>USB Serial</td><td>115200 baud, 8N1</td></tr>
+    <tr><td>RPI Serial (GPIO40/41)</td><td>115200 baud, 8N1</td></tr>
+    <tr><td>Status Report Interval</td><td>2 seconds</td></tr>
+</table>
+
+<h2>9.4 Storage</h2>
+<p>The following parameters are stored in non-volatile memory (NVM) and persist across power cycles:</p>
+<ul>
+    <li>Setpoint</li>
+    <li>K-Factors (CH1-4)</li>
+    <li>Cycle Counts (CH1-4)</li>
+</ul>
+
+<hr style="margin-top: 50px;">
+<p style="text-align: center; color: #666; font-style: italic;">— End of Manual —</p>
+<p style="text-align: center; color: #999; font-size: 0.9em;">M5StampPLC Batch Fill Controller v0.16</p>
+
+</body>
+</html>
