@@ -1,11 +1,12 @@
 /* 4-Pump Batch Fill Controller for Teensy LC
-   Version 2.2 - USB Serial Communication
+   Version 2.3 - USB Serial with Remote Mode
 
    1/5/26 remapped pins for teensy LC
    1/5/26 use opto IO
    1/22/26 converted to M5Stack 4-Relay I2C module
    1/22/26 added Serial1 TX/RX for RPI4 HMI communication
    2/5/26 changed to USB Serial for MyBuddy RPI communication
+   2/5/26 added remote mode - ignores bag switches when RPI connected
 
    Hardware:
    - Teensy LC
