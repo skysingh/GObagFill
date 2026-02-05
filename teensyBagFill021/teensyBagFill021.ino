@@ -24,7 +24,7 @@
 #include <FreqMeasureMulti.h>
 #include <Wire.h>
 
-const float ver = 2.2;
+const float ver = 2.3;
 
 // I2C 4-Relay Module
 #define MODULE_4RELAY_ADDR 0x26
@@ -106,6 +106,7 @@ int cum_count[4];
 int pumpStatus[4] = {0, 0, 0, 0};  // 0=IDLE, 1=RUNNING, 2=COMPLETE, 3=FAILED
 bool latched[4] = {false, false, false, false};  // HMI start latch
 int SPml = 375;  // Setpoint in mL
+bool remoteMode = false;  // True when receiving commands from RPI (ignores bag switches)
 
 // Timing
 unsigned long onesecMillis = millis();
@@ -202,17 +203,21 @@ void loop() {
     
     for (uint8_t i = 0; i < 4; i++) {
       checkSwitch(i);
-      
+
       switch (pumpStatus[i]) {
         case 0:  // IDLE - waiting for start
-          if (SWState[i] == 0 && latched[i]) {
+          // Remote mode: start when latched (ignore bag switch)
+          // Local mode: require bag switch AND latched
+          if (latched[i] && (remoteMode || SWState[i] == 0)) {
             pumpStatus[i] = 1;  // Start pump
           }
           break;
-          
+
         case 2:  // COMPLETE - waiting for reset
         case 3:  // FAILED - waiting for reset
-          if (SWState[i] != 0 && !latched[i]) {
+          // Remote mode: reset when not latched
+          // Local mode: reset when bag removed AND not latched
+          if (!latched[i] && (remoteMode || SWState[i] != 0)) {
             pumpStatus[i] = 0;  // Reset to IDLE
             PVml[i] = 0.0;
             cum_count[i] = 0;
@@ -278,7 +283,15 @@ void processSerial() {
 void parseCommand(String cmd) {
   cmd.trim();
   Serial.print("RX: "); Serial.println(cmd);
-  
+
+  // Enable remote mode when any valid command received
+  if (cmd.startsWith("SP=") || cmd.startsWith("START") || cmd.startsWith("STOP")) {
+    if (!remoteMode) {
+      remoteMode = true;
+      Serial.println("REMOTE MODE: Bag switches ignored");
+    }
+  }
+
   // Setpoint command: SP=xxx
   if (cmd.startsWith("SP=")) {
     int newSP = cmd.substring(3).toInt();
@@ -358,9 +371,13 @@ void checkSwitch(int num) {
 
 boolean checkPump(int pumpIndex) {
   boolean done = false;
-  
-  if (SWState[pumpIndex] == 0 && latched[pumpIndex]) {
-    // Bag on holder and latched
+
+  // Remote mode: ignore bag switch, just check latched
+  // Local mode: require bag switch AND latched
+  bool bagOk = remoteMode || (SWState[pumpIndex] == 0);
+
+  if (bagOk && latched[pumpIndex]) {
+    // Bag on holder (or remote mode) and latched
     if (int(PVml[pumpIndex]) >= SPml) {
       RELAY.setRelay(pumpIndex, false);
       pumpStatus[pumpIndex] = 2;  // COMPLETE
