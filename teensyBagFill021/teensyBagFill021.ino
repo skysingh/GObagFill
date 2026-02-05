@@ -1,19 +1,20 @@
 /* 4-Pump Batch Fill Controller for Teensy LC
-   Version 2.1 - Serial HMI Communication
-   
+   Version 2.2 - USB Serial Communication
+
    1/5/26 remapped pins for teensy LC
    1/5/26 use opto IO
    1/22/26 converted to M5Stack 4-Relay I2C module
    1/22/26 added Serial1 TX/RX for RPI4 HMI communication
-   
+   2/5/26 changed to USB Serial for MyBuddy RPI communication
+
    Hardware:
    - Teensy LC
    - M5Stack 4-Relay I2C Module (0x26)
-   - Serial1: TX1(pin1) RX1(pin0) -> RPI4 HMI
-   
+   - USB: Connect to RPI4 USB port (appears as /dev/ttyACM0)
+
    Protocol (to RPI):
    - JSON status every 500ms
-   
+
    Protocol (from RPI):
    - SP=xxx    : Set setpoint
    - STARTn    : Start channel n (1-4)
@@ -23,7 +24,7 @@
 #include <FreqMeasureMulti.h>
 #include <Wire.h>
 
-const float ver = 2.1;
+const float ver = 2.2;
 
 // I2C 4-Relay Module
 #define MODULE_4RELAY_ADDR 0x26
@@ -120,10 +121,9 @@ String rxBuffer = "";
 // Setup
 // ============================================================================
 void setup() {
-  Serial.begin(115200);   // Debug USB
-  Serial1.begin(115200);  // RPI HMI on TX1/RX1
+  Serial.begin(115200);   // USB Serial for RPI communication
   delay(500);
-  
+
   Serial.println();
   Serial.print("4-Pump Batch Controller v"); Serial.println(ver);
   Serial.println("==========================");
@@ -157,7 +157,7 @@ void setup() {
   pinMode(ledPin, OUTPUT);
   digitalWrite(ledPin, HIGH);
   
-  Serial.println("Serial1 HMI link active");
+  Serial.println("USB HMI link active");
   Serial.println("READY");
 }
 
@@ -258,8 +258,8 @@ void loop() {
 // Serial Communication
 // ============================================================================
 void processSerial() {
-  while (Serial1.available()) {
-    char c = Serial1.read();
+  while (Serial.available()) {
+    char c = Serial.read();
     
     if (c == '\n' || c == '\r') {
       if (rxBuffer.length() > 0) {
@@ -341,8 +341,8 @@ void sendJSON() {
   }
   
   json += "]}";
-  
-  Serial1.println(json);
+
+  Serial.println(json);
 }
 
 // ============================================================================
